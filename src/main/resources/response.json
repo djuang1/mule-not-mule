@@ -1,0 +1,85 @@
+{
+    "responses": [
+        {
+            "logoAnnotations": [
+                {
+                    "mid": "/m/07s5jcv",
+                    "description": "MuleSoft",
+                    "score": 0.5008466,
+                    "boundingPoly": {
+                        "vertices": [
+                            {
+                                "x": 15,
+                                "y": 179
+                            },
+                            {
+                                "x": 239,
+                                "y": 179
+                            },
+                            {
+                                "x": 239,
+                                "y": 226
+                            },
+                            {
+                                "x": 15,
+                                "y": 226
+                            }
+                        ]
+                    }
+                }
+            ],
+            "labelAnnotations": [
+                {
+                    "mid": "/m/01g5v",
+                    "description": "blue",
+                    "score": 0.96817416
+                },
+                {
+                    "mid": "/m/07s6nbt",
+                    "description": "text",
+                    "score": 0.9484403
+                },
+                {
+                    "mid": "/m/0dwx7",
+                    "description": "logo",
+                    "score": 0.8348086
+                },
+                {
+                    "mid": "/m/03gq5hm",
+                    "description": "font",
+                    "score": 0.83406
+                },
+                {
+                    "mid": "/m/02n3pb",
+                    "description": "product",
+                    "score": 0.8215477
+                },
+                {
+                    "mid": "/m/03scnj",
+                    "description": "line",
+                    "score": 0.72772485
+                },
+                {
+                    "mid": "/m/01cd9",
+                    "description": "brand",
+                    "score": 0.67280024
+                },
+                {
+                    "mid": "/m/0n0j",
+                    "description": "area",
+                    "score": 0.6720096
+                },
+                {
+                    "mid": "/m/01jwgf",
+                    "description": "product",
+                    "score": 0.6463231
+                },
+                {
+                    "mid": "/m/021sdg",
+                    "description": "graphics",
+                    "score": 0.6128535
+                }
+            ]
+        }
+    ]
+}

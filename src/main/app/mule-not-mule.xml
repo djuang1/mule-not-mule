@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ajax="http://www.mulesoft.org/schema/mule/ajax" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ajax http://www.mulesoft.org/schema/mule/ajax/current/mule-ajax.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="Vision_API_Request_Configuration" protocol="HTTPS" host="vision.googleapis.com" port="443" basePath="/" doc:name="HTTP Request Configuration"/>
+    
+    <ajax:connector name="ajaxServer" serverUrl="http://0.0.0.0:8090/web" resourceBase="${app.home}/docroot" doc:name="Ajax" jsonCommented="true"/>
+    
+    <flow name="vision-api-flow">
+    	<ajax:inbound-endpoint channel="/services/echo" connector-ref="ajaxServer" doc:name="Ajax" responseTimeout="10000"/>
+        <set-variable variableName="imageURL" value="#[payload.imageURL]" doc:name="Variable"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="2465810c-e1cf-479e-bc3a-c7907289791f">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	requests: [{
+		image: {
+			source: {
+				imageUri: flowVars.imageURL
+			}
+		},
+		features: [{
+			type: "LABEL_DETECTION"
+		},
+        {
+          "type":"LOGO_DETECTION"
+        }]
+	}]
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <http:request config-ref="Vision_API_Request_Configuration" path="/v1/images:annotate" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="key" value="${api.key}"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="#[payload:java.lang.String]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="82917aa0-b841-4ca0-86fc-ab7a338393ff">
+            <dw:input-payload doc:sample="response.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	mule: (payload.responses.*labelAnnotations[0].description contains "mule") or (payload.responses.*logoAnnotations[0].description contains "MuleSoft"),
+	imageURL: flowVars.imageURL
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" mimeType="application/json" doc:name="JSON to Map"/>
+        <!--
+        <ajax:outbound-endpoint channel="/notifications/mule" connector-ref="ajaxServer" responseTimeout="10000" doc:name="Ajax"/>
+                
+         
+        <json:json-to-object-transformer returnClass="java.util.HashMap" mimeType="application/json" doc:name="JSON to Map"/>
+        <foreach collection="payload.responses[0].labelAnnotations" doc:name="For Each">
+            <choice doc:name="Choice">
+                <when expression="#[payload.description == 'mule']">
+                    <ajax:outbound-endpoint channel="/notifications/mule" connector-ref="ajaxServer" responseTimeout="10000" doc:name="Ajax"/>
+                </when>
+                <otherwise>
+                    <logger message="Not Hot Dog!" level="INFO" doc:name="Logger"/>
+                    <ajax:outbound-endpoint channel="/notifications/notmule" connector-ref="ajaxServer" responseTimeout="10000" doc:name="Ajax"/>
+                </otherwise>
+            </choice>
+        </foreach>
+         -->
+	</flow>
+	
+	<flow name="remote-vision-api-flow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/code/" allowedMethods="GET" doc:name="HTTP"/>
+        <set-variable variableName="imageURL" value="https://www.dogbreedinfo.com/images11/burrowStand1.jpg" doc:name="Variable"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="2465810c-e1cf-479e-bc3a-c7907289791f">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	requests: [{
+		image: {
+			source: {
+				imageUri: flowVars.imageURL
+			}
+		},
+		features: [{
+			type: "LABEL_DETECTION"
+		},
+        {
+          "type":"LOGO_DETECTION"
+        }]
+	}]
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <http:request config-ref="Vision_API_Request_Configuration" path="/v1/images:annotate" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="key" value="${api.key}"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message" metadata:id="82917aa0-b841-4ca0-86fc-ab7a338393ff">
+            <dw:input-payload doc:sample="response.json" mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	mule: (payload.responses.*labelAnnotations[0].description contains "mule") or (payload.responses.*logoAnnotations[0].description contains "MuleSoft"),
+	imageURL: flowVars.imageURL
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" mimeType="application/json" doc:name="JSON to Map"/>
+        
+        <ajax:outbound-endpoint channel="/notifications/mule" connector-ref="ajaxServer" responseTimeout="10000" doc:name="Ajax"/>
+        <!-- 
+        <idempotent-message-filter idExpression="#[payload]" doc:name="Process only once per 60s">
+            <in-memory-store name="shortterm" maxEntries="1" entryTTL="30000" expirationInterval="5000"/>
+        </idempotent-message-filter>
+         -->
+    </flow>
+    
+</mule>

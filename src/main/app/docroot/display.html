@@ -1,0 +1,158 @@
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>Not Mule?</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+	<script type="text/javascript" src="mule-resource/js/dojo/dojo.js"></script>
+	<script type="text/javascript" src="mule-resource/js/mule.js"></script>
+
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+	<script type="text/javascript">
+
+		function init() {
+			document.getElementById("results").style.visibility = "hidden";
+			mule.subscribe("/notifications/mule", notif);
+		}
+
+		function dispose() {
+			mule.unsubscribe("/notifications/mule", notif);
+		}
+
+		function notif(message) {
+			console.log(message);
+			console.log(message.data);
+
+			if (message.data.mule){
+				document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
+			} else {
+				document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
+			}
+			document.getElementById("processedImage").src=message.data.imageURL;
+			document.getElementById("results").style.visibility = "visible";
+			//document.getElementById("productImage").style.visibility = "visible";
+		}
+
+		function clearScreen() {
+			console.debug("Clearing display.");
+			document.getElementById("results").style.visibility = "hidden";
+			document.getElementById('imageURL').value = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg";
+		}
+
+		function callVisionAPI() {
+
+			$(".overlay").show();
+
+			document.getElementById("results").style.visibility = "hidden";
+			//document.getElementById("processedImage").style.visibility = "visible";
+			document.getElementById("processedImage").src=document.getElementById("imageURL").value;
+
+			var data = new Object();
+			data.imageURL = document.getElementById('imageURL').value;
+
+			mule.rpc("/services/echo", data, callbackAPIResponse);
+
+		}
+
+		/*
+		function remoteVisionAPICall() {
+
+			//document.getElementById("processedImage").style.visibility = "visible";
+			document.getElementById("processedImage").src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg";
+
+			var data = new Object();
+			data.imageURL = document.getElementById('imageURL').value;
+			mule.rpc("/services/echo", data, callbackAPIResponse);
+		}
+		*/
+
+		function callbackAPIResponse(message) {
+			if (message.data.mule){
+				document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
+			} else {
+				document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
+			}
+			document.getElementById("processedImage").src=message.data.imageURL;
+			document.getElementById("results").style.visibility = "visible";
+
+			$(".overlay").hide();
+			//document.getElementById("imageLocation").innerHTML = "<h1>Mule (Score: " + message.data.score + ")</h1><br/>";
+		}
+
+		//setInterval(clear,3000);
+	</script>
+
+	<style>
+
+	#loading-img {
+    background: url(img/searching.gif) center center no-repeat;
+    height: 100%;
+    z-index: 20;
+	}
+
+	.overlay {
+		background: #ffffff;
+		display: none;
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		opacity: 1.0;
+	}
+
+	</style>
+</head>
+
+<body onload="init()" onunload="dispose()">
+	<div class="overlay">
+	  <div id="loading-img"></div>
+	</div>
+
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<a class="navbar-brand" href="#">
+				<img src="https://www.mulesoft.com/sites/default/files/3C_mulesoft_logo_updated.svg" height="64"/>
+			</a>
+	</nav>
+
+	<div class="jumbotron">
+		<div class="container">
+			<h1 class="display-3">Not Mule?</h1>
+
+			<div class="form-group">
+				<label for="inputImageURL">Image URL</label>
+				<input type="text" class="form-control" id="imageURL" aria-describedby="imageURLHelp" value="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg" placeholder="e.g. http://www.photo-dictionary.com/photofiles/list/3563/4715mule.jpg">
+				<small id="imageURLHelp" class="form-text text-muted">Paste the URL for an image to see if it is a mule.</small>
+			</div>
+			<button type="submit" class="btn btn-primary" onclick="callVisionAPI();">Submit</button>
+			<button type="submit" class="btn btn-primary" onclick="clearScreen();">Reset</button>
+
+			<!--
+			<hr/>
+			<div class="row">
+		    <div class="col">
+		      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg" class="rounded img-fluid" alt="Mule">
+		    </div>
+		    <div class="col">
+		      <img src="http://www.wienerschnitzel.com/wp-content/uploads/2014/10/hotdog_mustard-main.jpg" class="rounded img-fluid" alt="Hot Dog">
+		    </div>
+				<div class="col">
+		      <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Favory_Pallavicina.jpg" class="rounded img-fluid" alt="Horse">
+		    </div>
+	  	</div>
+			-->
+
+		</div>
+	</div>
+
+	<div id="results" style="text-align: center">
+		<div id="imageLocation"></div>
+		<img id="processedImage" width="300px" src="img/logo.png" />
+	</div>
+
+
+
+</body>
