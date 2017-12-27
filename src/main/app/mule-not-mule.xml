@@ -45,18 +45,42 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
                 <http:query-param paramName="key" value="${api.key}"/>
             </http:request-builder>
         </http:request>
-        <logger message="#[payload:java.lang.String]" level="INFO" doc:name="Logger"/>
-        <dw:transform-message doc:name="Transform Message" metadata:id="82917aa0-b841-4ca0-86fc-ab7a338393ff">
+        <dw:transform-message doc:name="Transform Message" metadata:id="bdde2c80-22e7-4e47-85bf-986acc3164c5">
             <dw:input-payload doc:sample="response.json" mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
-%output application/json
+%output application/java
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+        <choice doc:name="Choice">
+            <when expression="#[payload.responses[0].containsKey('error')]">
+                <logger level="INFO" doc:name="Logger"/>
+                <dw:transform-message doc:name="Transform Message" metadata:id="75b12c04-27c2-481a-8bba-5a97b7e855f8">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	mule: '',
+	imageURL: flowVars.imageURL,
+	error: true
+}]]></dw:set-payload>
+                </dw:transform-message>
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger"/>
+                <dw:transform-message doc:name="Transform Message" metadata:id="f728e353-eb45-4262-bda7-9c5893920e50">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
 ---
 {
 	mule: (payload.responses.*labelAnnotations[0].description contains "mule") or (payload.responses.*logoAnnotations[0].description contains "MuleSoft"),
-	imageURL: flowVars.imageURL
+	imageURL: flowVars.imageURL,
+	error: false
 }]]></dw:set-payload>
-        </dw:transform-message>
-        <json:json-to-object-transformer returnClass="java.util.HashMap" mimeType="application/json" doc:name="JSON to Map"/>
+                </dw:transform-message>
+            </otherwise>
+        </choice>
+        
         <!--
         <ajax:outbound-endpoint channel="/notifications/mule" connector-ref="ajaxServer" responseTimeout="10000" doc:name="Ajax"/>
                 

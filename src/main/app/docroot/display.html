@@ -70,12 +70,21 @@
 		*/
 
 		function callbackAPIResponse(message) {
-			if (message.data.mule){
-				document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
+			if (message.data.error) {
+				document.getElementById("imageLocation").innerHTML = "<h1>Image Error</h1><br/>";
+				document.getElementById("processedImage").src="img/logo.png";
 			} else {
-				document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
+				if (message.data.mule){
+					document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
+				} else {
+					document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
+				}
+				document.getElementById("processedImage").src=message.data.imageURL;
 			}
-			document.getElementById("processedImage").src=message.data.imageURL;
+
+
+
+
 			document.getElementById("results").style.visibility = "visible";
 
 			$(".overlay").hide();
@@ -101,7 +110,7 @@
 		right: 0;
 		bottom: 0;
 		left: 0;
-		opacity: 1.0;
+		opacity: 0.7;
 	}
 
 	</style>
