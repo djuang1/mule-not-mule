@@ -12,7 +12,6 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
 	<script type="text/javascript">
-
 		function init() {
 			document.getElementById("results").style.visibility = "hidden";
 			mule.subscribe("/notifications/mule", notif);
@@ -26,12 +25,12 @@
 			console.log(message);
 			console.log(message.data);
 
-			if (message.data.mule){
+			if (message.data.mule) {
 				document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
 			} else {
 				document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
 			}
-			document.getElementById("processedImage").src=message.data.imageURL;
+			document.getElementById("processedImage").src = message.data.imageURL;
 			document.getElementById("results").style.visibility = "visible";
 			//document.getElementById("productImage").style.visibility = "visible";
 		}
@@ -39,6 +38,7 @@
 		function clearScreen() {
 			console.debug("Clearing display.");
 			document.getElementById("results").style.visibility = "hidden";
+			document.getElementById("examples").style.visibility = "visible";
 			document.getElementById('imageURL').value = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg";
 		}
 
@@ -46,15 +46,32 @@
 
 			$(".overlay").show();
 
+
+			document.getElementById("examples").style.visibility = "hidden";
 			document.getElementById("results").style.visibility = "hidden";
 			//document.getElementById("processedImage").style.visibility = "visible";
-			document.getElementById("processedImage").src=document.getElementById("imageURL").value;
+			document.getElementById("processedImage").src = document.getElementById("imageURL").value;
 
 			var data = new Object();
 			data.imageURL = document.getElementById('imageURL').value;
 
 			mule.rpc("/services/echo", data, callbackAPIResponse);
 
+		}
+
+		function callVisionAPIWithExamples(_src) {
+			$(".overlay").show();
+
+			document.getElementById("examples").style.visibility = "hidden";
+			document.getElementById("examples").style.height = 0;
+
+			document.getElementById("results").style.visibility = "hidden";
+			document.getElementById("processedImage").src = _src;
+
+			var data = new Object();
+			data.imageURL = _src;
+
+			mule.rpc("/services/echo", data, callbackAPIResponse);
 		}
 
 		/*
@@ -72,19 +89,15 @@
 		function callbackAPIResponse(message) {
 			if (message.data.error) {
 				document.getElementById("imageLocation").innerHTML = "<h1>Image Error</h1><br/>";
-				document.getElementById("processedImage").src="img/logo.png";
+				document.getElementById("processedImage").src = "img/logo.png";
 			} else {
-				if (message.data.mule){
+				if (message.data.mule) {
 					document.getElementById("imageLocation").innerHTML = "<h1>Mule</h1><br/>";
 				} else {
 					document.getElementById("imageLocation").innerHTML = "<h1>Not Mule</h1><br/>";
 				}
-				document.getElementById("processedImage").src=message.data.imageURL;
+				document.getElementById("processedImage").src = message.data.imageURL;
 			}
-
-
-
-
 			document.getElementById("results").style.visibility = "visible";
 
 			$(".overlay").hide();
@@ -95,30 +108,28 @@
 	</script>
 
 	<style>
+		#loading-img {
+			background: url(img/searching.gif) center center no-repeat;
+			height: 100%;
+			z-index: 20;
+		}
 
-	#loading-img {
-    background: url(img/searching.gif) center center no-repeat;
-    height: 100%;
-    z-index: 20;
-	}
-
-	.overlay {
-		background: #ffffff;
-		display: none;
-		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		opacity: 0.7;
-	}
-
+		.overlay {
+			background: #ffffff;
+			display: none;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			opacity: 0.7;
+		}
 	</style>
 </head>
 
 <body onload="init()" onunload="dispose()">
 	<div class="overlay">
-	  <div id="loading-img"></div>
+		<div id="loading-img"></div>
 	</div>
 
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -130,30 +141,46 @@
 	<div class="jumbotron">
 		<div class="container">
 			<h1 class="display-3">Not Mule?</h1>
-
 			<div class="form-group">
 				<label for="inputImageURL">Image URL</label>
 				<input type="text" class="form-control" id="imageURL" aria-describedby="imageURLHelp" value="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg" placeholder="e.g. http://www.photo-dictionary.com/photofiles/list/3563/4715mule.jpg">
-				<small id="imageURLHelp" class="form-text text-muted">Paste the URL for an image to see if it is a mule.</small>
+				<small id="imageURLHelp" class="form-text text-muted">Paste the URL for an image to see if it is a mule. (File must be under 4.0 MB)</small>
 			</div>
 			<button type="submit" class="btn btn-primary" onclick="callVisionAPI();">Submit</button>
 			<button type="submit" class="btn btn-primary" onclick="clearScreen();">Reset</button>
+		</div>
+	</div>
 
-			<!--
-			<hr/>
-			<div class="row">
-		    <div class="col">
-		      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg" class="rounded img-fluid" alt="Mule">
-		    </div>
-		    <div class="col">
-		      <img src="http://www.wienerschnitzel.com/wp-content/uploads/2014/10/hotdog_mustard-main.jpg" class="rounded img-fluid" alt="Hot Dog">
-		    </div>
-				<div class="col">
-		      <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Favory_Pallavicina.jpg" class="rounded img-fluid" alt="Horse">
-		    </div>
-	  	</div>
-			-->
+	<div class="container" id="examples">
 
+		<div class="row">
+			<div class="col">
+				<div class="card" style="width: 20rem;">
+					<img class="card-img-top" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Juancito.jpg/1200px-Juancito.jpg" onclick="callVisionAPIWithExamples(this.src);" alt="Mule">
+					<div class="card-body">
+						<h4 class="card-title">Mule</h4>
+						<p class="card-text">Click the image.</p>
+					</div>
+				</div>
+			</div>
+			<div class="col">
+				<div class="card" style="width: 20rem;">
+					<img class="card-img-top" src="https://vignette.wikia.nocookie.net/sml/images/7/7e/Hot-dog-06.jpg/revision/latest?cb=20161010191818" onclick="callVisionAPIWithExamples(this.src);" alt="Hot Dog">
+					<div class="card-body">
+						<h4 class="card-title">Hot Dog</h4>
+						<p class="card-text">Click the image.</p>
+					</div>
+				</div>
+			</div>
+			<div class="col">
+				<div class="card" style="width: 20rem;">
+					<img class="card-img-top" src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Favory_Pallavicina.jpg" onclick="callVisionAPIWithExamples(this.src);" alt="Horse">
+					<div class="card-body">
+						<h4 class="card-title">Horse</h4>
+						<p class="card-text">Click the image.</p>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -161,7 +188,5 @@
 		<div id="imageLocation"></div>
 		<img id="processedImage" width="300px" src="img/logo.png" />
 	</div>
-
-
 
 </body>
