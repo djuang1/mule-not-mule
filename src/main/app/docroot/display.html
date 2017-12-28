@@ -43,11 +43,11 @@
 		}
 
 		function callVisionAPI() {
-
 			$(".overlay").show();
 
-
 			document.getElementById("examples").style.visibility = "hidden";
+			document.getElementById("examples").style.height = 0;
+
 			document.getElementById("results").style.visibility = "hidden";
 			//document.getElementById("processedImage").style.visibility = "visible";
 			document.getElementById("processedImage").src = document.getElementById("imageURL").value;
